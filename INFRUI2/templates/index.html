@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fruit Finder</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #fdfbfb, #ebedee);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            width: 100%;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #27ae60;
+            outline: none;
+            box-shadow: 0 0 5px rgba(39, 174, 96, 0.3);
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #219150;
+            transform: translateY(-2px);
+        }
+
+        #result {
+            margin-top: 20px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 10px;
+            color: #333;
+            font-size: 15px;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+            display: none;
+        }
+
+        #result.show {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        #fruitImage {
+            max-width: 150px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #27ae60;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        .loader.show {
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .image-wrapper {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>InFruit</h1>
+        <div class="input-group">
+            <input type="text" id="fruitInput" placeholder="Enter fruit name">
+            <button onclick="fetchFruit()">Search</button>
+        </div>
+        <div class="loader" id="loader"></div>
+        <div id="result">
+            <div class="image-wrapper">
+                <img id="fruitImage" src="" alt="Fruit image" />
+            </div>
+            <div id="fruitInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchFruit() {
+            const fruit = document.getElementById('fruitInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            const fruitImage = document.getElementById('fruitImage');
+            const fruitInfo = document.getElementById('fruitInfo');
+            const loader = document.getElementById('loader');
+
+            if (!fruit) {
+                fruitInfo.innerHTML = 'Please enter a fruit name.';
+                fruitImage.style.display = 'none';
+                resultDiv.classList.add('show');
+                return;
+            }
+
+            loader.classList.add('show');
+            resultDiv.classList.remove('show');
+            fruitInfo.innerHTML = '';
+            fruitImage.src = '';
+
+            try {
+                const response = await fetch(`/getFruit?fruit=${encodeURIComponent(fruit)}`);
+                const data = await response.json();
+
+                loader.classList.remove('show');
+
+                if (data.error) {
+                    fruitInfo.innerHTML = `<strong>Error:</strong> ${data.error}`;
+                    fruitImage.style.display = 'none';
+                } else {
+                    fruitImage.src = data.image || 'https://via.placeholder.com/150?text=No+Image';
+                    fruitImage.alt = data.name;
+                    fruitImage.style.display = 'inline-block';
+
+                    fruitInfo.innerHTML = `
+                        <strong>Name:</strong> ${data.name} <br>
+                        <strong>Family:</strong> ${data.family} <br>
+                        <strong>Order:</strong> ${data.order} <br>
+                        <strong>Genus:</strong> ${data.genus} <br><br>
+                        <strong>Nutritions (per 100g):</strong><br>
+                        Calories: ${data.nutritions.calories} kcal<br>
+                        Fat: ${data.nutritions.fat} g<br>
+                        Sugar: ${data.nutritions.sugar} g<br>
+                        Carbohydrates: ${data.nutritions.carbohydrates} g<br>
+                        Protein: ${data.nutritions.protein} g<br><br>
+                        <strong>Health Benefits:</strong>
+                        <ul>
+                            ${data.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+
+                resultDiv.classList.add('show');
+            } catch (err) {
+                loader.classList.remove('show');
+                fruitInfo.innerHTML = `Request failed: ${err.message}`;
+                fruitImage.style.display = 'none';
+                resultDiv.classList.add('show');
+            }
+        }
+    </script>
+</body>
+</html>
