@@ -106,7 +106,9 @@
         }
 
         #fruitImage {
-            max-width: 150px;
+            width: 100%;
+            max-width: 475px;
+            height: auto;
             border-radius: 10px;
             margin-bottom: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -156,7 +158,9 @@
         <div class="loader" id="loader"></div>
         <div id="result">
             <div class="image-wrapper">
-                <img id="fruitImage" src="" alt="Fruit image" />
+                <a id="wikiLink" href="#" target="_blank">
+                    <img id="fruitImage" src="" alt="Fruit image" />
+                </a>
             </div>
             <div id="fruitInfo"></div>
         </div>
@@ -192,6 +196,7 @@
                     fruitInfo.innerHTML = `<strong>Error:</strong> ${data.error}`;
                     fruitImage.style.display = 'none';
                 } else {
+                    document.getElementById('wikiLink').href = `https://en.wikipedia.org/wiki/${encodeURIComponent(data.name)}`;
                     fruitImage.src = data.image || 'https://via.placeholder.com/150?text=No+Image';
                     fruitImage.alt = data.name;
                     fruitImage.style.display = 'inline-block';
